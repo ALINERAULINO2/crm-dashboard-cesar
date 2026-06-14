@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard CRM — Vendedor Cesar</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', sans-serif; background: #0f1117; color: #e2e8f0; }
+
+  .header {
+    background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+    padding: 24px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 3px solid #3b82f6;
+  }
+  .header h1 { font-size: 22px; font-weight: 700; letter-spacing: 0.5px; }
+  .header .sub { font-size: 13px; color: #93c5fd; margin-top: 4px; }
+  .header .date { font-size: 13px; color: #bfdbfe; background: rgba(255,255,255,0.1); padding: 6px 14px; border-radius: 20px; }
+
+  .container { padding: 28px 32px; max-width: 1400px; margin: 0 auto; }
+
+  /* KPI CARDS */
+  .kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 28px; }
+  .kpi-card {
+    background: #1e2030; border-radius: 12px; padding: 20px;
+    border-left: 4px solid #3b82f6; position: relative; overflow: hidden;
+  }
+  .kpi-card.green { border-left-color: #22c55e; }
+  .kpi-card.red { border-left-color: #ef4444; }
+  .kpi-card.orange { border-left-color: #f97316; }
+  .kpi-card.yellow { border-left-color: #eab308; }
+  .kpi-card .label { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .kpi-card .value { font-size: 36px; font-weight: 800; line-height: 1; }
+  .kpi-card.green .value { color: #4ade80; }
+  .kpi-card.red .value { color: #f87171; }
+  .kpi-card.orange .value { color: #fb923c; }
+  .kpi-card.yellow .value { color: #facc15; }
+  .kpi-card .value.blue { color: #60a5fa; }
+  .kpi-card .hint { font-size: 11px; color: #64748b; margin-top: 6px; }
+
+  /* SECTIONS */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+  .grid-13 { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; margin-bottom: 20px; }
+  .card {
+    background: #1e2030; border-radius: 12px; padding: 20px;
+  }
+  .card-title {
+    font-size: 13px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1px; color: #94a3b8; margin-bottom: 16px;
+    padding-bottom: 10px; border-bottom: 1px solid #2d3148;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card-title .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .dot-blue { background: #3b82f6; }
+  .dot-green { background: #22c55e; }
+  .dot-red { background: #ef4444; }
+  .dot-orange { background: #f97316; }
+  .dot-yellow { background: #eab308; }
+  .dot-purple { background: #a855f7; }
+
+  /* FUNIL */
+  .funnel { display: flex; gap: 4px; align-items: stretch; height: 100px; }
+  .funnel-stage {
+    flex: 1; border-radius: 8px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; position: relative;
+    padding: 10px;
+  }
+  .funnel-stage .f-val { font-size: 28px; font-weight: 800; }
+  .funnel-stage .f-label { font-size: 10px; color: rgba(255,255,255,0.7); text-align: center; margin-top: 2px; }
+  .f-ativo { background: linear-gradient(135deg, #1e40af, #2563eb); }
+  .f-negoc { background: linear-gradient(135deg, #7c3aed, #8b5cf6); }
+  .f-prop { background: linear-gradient(135deg, #d97706, #f59e0b); }
+  .f-ganho { background: linear-gradient(135deg, #15803d, #22c55e); }
+  .f-concor { background: linear-gradient(135deg, #b91c1c, #ef4444); }
+
+  /* TABELAS */
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { text-align: left; padding: 8px 10px; color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #2d3148; }
+  td { padding: 8px 10px; border-bottom: 1px solid #1a1d2e; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* BADGES */
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; text-transform: uppercase; }
+  .badge-meta { background: #1e3a8a; color: #93c5fd; }
+  .badge-site { background: #065f46; color: #6ee7b7; }
+  .badge-lig { background: #713f12; color: #fde68a; }
+  .badge-cart { background: #4c1d95; color: #c4b5fd; }
+  .badge-balcao { background: #1f2937; color: #9ca3af; }
+
+  .status-noresp { color: #f87171; font-weight: 600; }
+  .status-pens { color: #facc15; }
+  .status-conv { color: #4ade80; }
+  .status-vira { color: #a78bfa; }
+  .status-outros { color: #94a3b8; }
+
+  /* DATA URGENTE */
+  .urgente { color: #f87171; font-weight: 700; }
+  .hoje { color: #facc15; font-weight: 700; }
+  .normal { color: #94a3b8; }
+
+  /* BARRA DE MODELO */
+  .model-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .model-name { width: 120px; font-size: 12px; color: #e2e8f0; }
+  .bar-bg { flex: 1; background: #2d3148; border-radius: 4px; height: 18px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 8px; font-size: 11px; font-weight: 700; color: white; }
+  .bar-blue { background: linear-gradient(90deg, #2563eb, #3b82f6); }
+  .bar-teal { background: linear-gradient(90deg, #0d9488, #14b8a6); }
+  .bar-purple { background: linear-gradient(90deg, #7c3aed, #8b5cf6); }
+  .bar-orange { background: linear-gradient(90deg, #d97706, #f59e0b); }
+  .bar-pink { background: linear-gradient(90deg, #be185d, #ec4899); }
+  .bar-gray { background: linear-gradient(90deg, #475569, #64748b); }
+
+  /* ALERTA */
+  .alerta-box {
+    background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239,68,68,0.3);
+    border-radius: 8px; padding: 10px 14px; margin-bottom: 10px;
+    font-size: 12px; color: #fca5a5; display: flex; align-items: center; gap: 8px;
+  }
+  .alerta-box strong { color: #f87171; }
+
+  /* INSIGHT */
+  .insight {
+    background: rgba(59, 130, 246, 0.08); border-left: 3px solid #3b82f6;
+    border-radius: 4px; padding: 10px 14px; margin-top: 12px;
+    font-size: 11px; color: #93c5fd; line-height: 1.5;
+  }
+
+  /* PRÓX CONTATOS */
+  .contact-group { margin-bottom: 14px; }
+  .contact-date {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.5px; margin-bottom: 6px; padding: 3px 8px;
+    border-radius: 4px; display: inline-block;
+  }
+  .date-11 { background: rgba(234,179,8,0.2); color: #facc15; }
+  .date-12 { background: rgba(249,115,22,0.2); color: #fb923c; }
+  .date-15 { background: rgba(59,130,246,0.2); color: #60a5fa; }
+  .date-jul { background: rgba(148,163,184,0.1); color: #94a3b8; }
+  .contact-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pill {
+    background: #2d3148; border-radius: 6px; padding: 4px 10px;
+    font-size: 11px; display: flex; align-items: center; gap: 6px;
+  }
+  .pill .name { color: #e2e8f0; }
+  .pill .car { color: #64748b; font-size: 10px; }
+
+  .chart-wrap { position: relative; height: 180px; }
+  .chart-wrap-sm { position: relative; height: 150px; }
+
+  /* FOOTER */
+  .footer { text-align: center; padding: 20px; color: #334155; font-size: 11px; border-top: 1px solid #1e2030; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>Dashboard CRM — Vendas</h1>
+    <div class="sub">Vendedor: Cesar &nbsp;|&nbsp; Período: Dez/2025 – Jun/2026</div>
+  </div>
+  <div class="date">Atualizado: 02/06/2026</div>
+</div>
+
+<div class="container">
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="label">Pipeline ativo</div>
+      <div class="value blue">27</div>
+      <div class="hint">leads em andamento</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="label">Vendas realizadas</div>
+      <div class="value">20</div>
+      <div class="hint">Março + Maio/2026</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="label">Não respondem</div>
+      <div class="value">8</div>
+      <div class="hint">29% do pipeline ativo</div>
+    </div>
+    <div class="kpi-card orange">
+      <div class="label">Perdidos (concorrente)</div>
+      <div class="value">4</div>
+      <div class="hint">Sidy, Everton, Giovanne, Angelica</div>
+    </div>
+    <div class="kpi-card yellow">
+      <div class="label">Contatos até 15/06</div>
+      <div class="value">20</div>
+      <div class="hint">próximos 13 dias</div>
+    </div>
+  </div>
+
+  <!-- FUNIL + ORIGEM VENDAS -->
+  <div class="grid-2">
+
+    <div class="card">
+      <div class="card-title"><span class="dot dot-blue"></span> Funil de Vendas</div>
+      <div class="funnel">
+        <div class="funnel-stage f-ativo">
+          <div class="f-val">27</div>
+          <div class="f-label">ATIVO</div>
+        </div>
+        <div class="funnel-stage f-negoc">
+          <div class="f-val">0</div>
+          <div class="f-label">NEGOCIAÇÃO</div>
+        </div>
+        <div class="funnel-stage f-prop">
+          <div class="f-val">0</div>
+          <div class="f-label">PROPOSTA</div>
+        </div>
+        <div class="funnel-stage f-ganho">
+          <div class="f-val">20</div>
+          <div class="f-label">COMPROU AQUI</div>
+        </div>
+        <div class="funnel-stage f-concor">
+          <div class="f-val">4</div>
+          <div class="f-label">CONCORRENTE</div>
+        </div>
+      </div>
+      <div class="insight">
+        ⚠️ <strong>Atenção:</strong> Nenhum lead está em "Em Negociação" ou "Proposta".
+        O funil está polarizado: ou são Ativos (27) ou já fecharam (20).
+        Isso pode indicar falta de registro de etapas intermediárias — atualizar o CRM ajuda a prever fechamentos.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="dot dot-green"></span> Origem das Vendas (20 vendas)</div>
+      <div class="chart-wrap">
+        <canvas id="chartOrigemVendas"></canvas>
+      </div>
+      <div class="insight">
+        📌 <strong>Carteira</strong> é a maior fonte de vendas (40%). META gera leads mas as vendas vêm de relacionamento.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ORIGEM LEADS + MODELOS PROCURADOS -->
+  <div class="grid-2">
+
+    <div class="card">
+      <div class="card-title"><span class="dot dot-purple"></span> Origem dos Leads Ativos (27)</div>
+      <div class="chart-wrap">
+        <canvas id="chartOrigemLeads"></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="dot dot-teal"></span> Modelos mais procurados (pipeline ativo)</div>
+      <div style="padding-top:4px">
+        <div class="model-bar">
+          <div class="model-name">Nivus 0km</div>
+          <div class="bar-bg"><div class="bar-fill bar-blue" style="width:100%">6 leads</div></div>
+        </div>
+        <div class="model-bar">
+          <div class="model-name">Tera 0km</div>
+          <div class="bar-bg"><div class="bar-fill bar-teal" style="width:83%">5 leads</div></div>
+        </div>
+        <div class="model-bar">
+          <div class="model-name">T-Cross 200TSi</div>
+          <div class="bar-bg"><div class="bar-fill bar-purple" style="width:50%">3 leads</div></div>
+        </div>
+        <div class="model-bar">
+          <div class="model-name">Taos</div>
+          <div class="bar-bg"><div class="bar-fill bar-orange" style="width:33%">2 leads</div></div>
+        </div>
+        <div class="model-bar">
+          <div class="model-name">Corolla / Kwid</div>
+          <div class="bar-bg"><div class="bar-fill bar-pink" style="width:17%">1 cada</div></div>
+        </div>
+        <div class="model-bar">
+          <div class="model-name">Sem modelo</div>
+          <div class="bar-bg"><div class="bar-fill bar-gray" style="width:60%">9 leads</div></div>
+        </div>
+      </div>
+      <div class="insight">
+        🔥 <strong>Nivus</strong> e <strong>Tera</strong> concentram 41% das intenções. Confirmar estoque disponível para esses modelos.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- PRÓXIMOS CONTATOS -->
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-title"><span class="dot dot-yellow"></span> Próximos Contatos Agendados</div>
+    <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+
+      <div class="contact-group">
+        <div class="contact-date date-11">11/06 — 5 leads</div>
+        <div class="contact-pills" style="margin-top:6px">
+          <div class="pill"><span class="name">Manoel</span><span class="car">sem carro</span></div>
+          <div class="pill"><span class="name">Manoela</span><span class="car">Tera 0km</span></div>
+          <div class="pill"><span class="name">Leonardo</span><span class="car">T-Cross</span></div>
+          <div class="pill"><span class="name">Fernando</span><span class="car">Nivus 0km</span></div>
+          <div class="pill"><span class="name">Sem nome</span><span class="car">Nivus 0km</span></div>
+        </div>
+      </div>
+
+      <div class="contact-group">
+        <div class="contact-date date-12">12/06 — 5 leads</div>
+        <div class="contact-pills" style="margin-top:6px">
+          <div class="pill"><span class="name">Anelise</span><span class="car">Tera 0km</span></div>
+          <div class="pill"><span class="name">Cristiane</span><span class="car">T-Cross</span></div>
+          <div class="pill"><span class="name">Jonas</span><span class="car">Taos PCD</span></div>
+          <div class="pill"><span class="name">Claudia (Patricia)</span><span class="car">Nivus 0km</span></div>
+          <div class="pill"><span class="name">Qual preço?</span><span class="car">Nivus 0km</span></div>
+        </div>
+      </div>
+
+      <div class="contact-group">
+        <div class="contact-date date-15">15/06 — 10 leads</div>
+        <div class="contact-pills" style="margin-top:6px">
+          <div class="pill"><span class="name">Volni</span><span class="car">Tera 0km</span></div>
+          <div class="pill"><span class="name">Luiz</span><span class="car">—</span></div>
+          <div class="pill"><span class="name">Tiego</span><span class="car">Tera 0km</span></div>
+          <div class="pill"><span class="name">Querino</span><span class="car">—</span></div>
+          <div class="pill"><span class="name">Daniel (PCD)</span><span class="car">T-Cross</span></div>
+          <div class="pill"><span class="name">Átila</span><span class="car">Seminovos</span></div>
+          <div class="pill"><span class="name">Grasiela</span><span class="car">T-Cross 2023</span></div>
+          <div class="pill"><span class="name">E banco couro</span><span class="car">Nivus</span></div>
+          <div class="pill"><span class="name">Fabio</span><span class="car">Nivus</span></div>
+          <div class="pill"><span class="name">Ariston</span><span class="car">Tera 0km</span></div>
+        </div>
+      </div>
+
+      <div class="contact-group">
+        <div class="contact-date date-jul">01/07 — 7 leads</div>
+        <div class="contact-pills" style="margin-top:6px">
+          <div class="pill"><span class="name">Edson</span><span class="car">Corolla</span></div>
+          <div class="pill"><span class="name">Até 20k</span><span class="car">popular</span></div>
+          <div class="pill"><span class="name">PCD (Camila)</span><span class="car">PCD</span></div>
+          <div class="pill"><span class="name">Fernando R.</span><span class="car">Taos High</span></div>
+          <div class="pill"><span class="name">Joao (Kwid)</span><span class="car">Kwid</span></div>
+          <div class="pill"><span class="name">Maristela</span><span class="car">HB-20 Hatch</span></div>
+          <div class="pill"><span class="name">Claudia Sara</span><span class="car">Saveiro Cross</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ALERTAS + LEADS ATIVOS -->
+  <div class="grid-13">
+
+    <!-- ALERTAS -->
+    <div class="card">
+      <div class="card-title"><span class="dot dot-red"></span> Alertas Críticos</div>
+
+      <div class="alerta-box">
+        <strong>8 leads NÃO RESPONDEM</strong><br>Manoel, Anelise, Manoela, Leonardo, Fernando, Querino, Átila, Ariston
+      </div>
+
+      <div class="alerta-box">
+        <strong>3 leads PCD</strong> sem avanço registrado<br>
+        Camila (1962), Daniel (2783), Jonas (2795) — PCD tem prazo e processo diferente
+      </div>
+
+      <div class="alerta-box">
+        <strong>9 leads sem modelo registrado</strong><br>
+        Dificulta segmentação e acompanhamento — atualizar no CRM
+      </div>
+
+      <div style="margin-top:16px; font-size:12px; color:#64748b; border-top:1px solid #2d3148; padding-top:12px;">
+        <div style="color:#94a3b8; font-weight:600; margin-bottom:8px;">Perdidos para concorrente:</div>
+        <div style="margin-bottom:4px">• <span style="color:#f87171">Sidy</span> — Virtus Zero Km (jan/26)</div>
+        <div style="margin-bottom:4px">• <span style="color:#f87171">Everton</span> — Nivus/Compass até R$100k</div>
+        <div style="margin-bottom:4px">• <span style="color:#f87171">Giovanne</span> — não registrado</div>
+        <div>• <span style="color:#f87171">Angelica</span> — Polo Track</div>
+      </div>
+    </div>
+
+    <!-- TABELA PIPELINE -->
+    <div class="card">
+      <div class="card-title"><span class="dot dot-blue"></span> Pipeline Ativo — Todos os Leads (27)</div>
+      <div style="overflow-x:auto; max-height: 420px; overflow-y:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Cliente</th>
+              <th>Modelo</th>
+              <th>Origem</th>
+              <th>Status</th>
+              <th>Próx. Contato</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td style="color:#64748b">AERS00112</td><td>Edson</td><td>Corolla</td><td><span class="badge badge-site">Site</span></td><td class="status-outros">ATIVO</td><td class="normal">01/07</td></tr>
+            <tr><td style="color:#64748b">1890</td><td>Até 20k</td><td>Popular</td><td><span class="badge badge-meta">META</span></td><td class="status-outros">ATIVO</td><td class="normal">01/07</td></tr>
+            <tr><td style="color:#64748b">1962</td><td>Camila (PCD)</td><td>PCD</td><td><span class="badge badge-meta">META</span></td><td class="status-outros">PCD</td><td class="normal">01/07</td></tr>
+            <tr><td style="color:#64748b">AERS00201</td><td>Fernando R.</td><td>Taos High 2022</td><td><span class="badge badge-site">Site</span></td><td class="status-outros">ATIVO</td><td class="normal">01/07</td></tr>
+            <tr><td style="color:#64748b">2245</td><td>Manoel</td><td>—</td><td><span class="badge badge-meta">META</span></td><td class="status-noresp">NÃO RESPONDE</td><td class="urgente">11/06</td></tr>
+            <tr><td style="color:#64748b">AERS00251</td><td>Joao</td><td>Kwid</td><td><span class="badge badge-lig">Ligação</span></td><td class="status-outros">ATIVO</td><td class="normal">01/07</td></tr>
+            <tr><td style="color:#64748b">2700</td><td>Anelise</td><td>Tera 0km</td><td><span class="badge badge-meta">META</span></td><td class="status-noresp">NÃO RESPONDE</td><td class="urgente">12/06</td></tr>
+            <tr><td style="color:#64748b">2705</td><td>Manoela Mafra</td><td>Tera 0km</td><td><span class="badge badge-meta">META</span></td><td class="status-noresp">NÃO RESPONDE</td><td class="urgente">11/06</td></tr>
+            <tr><td style="color:#64748b">2709</td><td>Volni Pereira</td><td>Tera 0km</td><td><span class="badge badge-meta">META</span></td><td class="status-vira">VIRA AQUI</td><td class="hoje">15/06</td></tr>
+            <tr><td style="color:#64748b">2721</td><td>Leonardo</td><td>T-Cross 200TSi</td><td><span class="badge badge-meta">META</span></td><td class="status-noresp">NÃO RESPONDE</td><td class="urgente">11/06</td></tr>
+            <tr><td style="color:#64748b">2723</td><td>Fernando</td><td>Nivus 0km</td><td><span class="badge badge-meta">META</span></td><td class="status-noresp">NÃO RESPONDE</td><td class="urgente">11/06</td></tr>
+            <tr><td style="color:#64748b">2726</td><td>Maristela</td><td>HB-20 Hatch</td><td><span class="badge badge-meta">META</span></td><td class="status-outros">ATIVO</td><td class="normal">01/07</td></tr>
+            <tr><td style="color:#64748b">2735</td><td>Cristiane</td><td>T-Cross / Taos</td><td><span class="badge badge-meta">META</span></td><td class="status-pens">PENSANDO</td><td class="urgente">12/06</td></tr>
+            <tr><td style="color:#64748b">2754</td><td>Claudia Sara</td><td>Saveiro Cross</td><td><span class="badge badge-meta">META</span></td><td class="status-outros">ATIVO</td><td class="normal">01/07</td></tr>
+            <tr><td style="color:#64748b">2756</td><td>Luiz</td><td>—</td><td><span class="badge badge-meta">META</span></td><td class="status-outros">NÃO PODE FALAR</td><td class="hoje">15/06</td></tr>
+            <tr><td style="color:#64748b">2763</td><td>Tiego</td><td>Tera 0km</td><td><span class="badge badge-meta">META</span></td><td class="status-pens">PENSANDO</td><td class="hoje">15/06</td></tr>
+            <tr><td style="color:#64748b">2775</td><td>Querino</td><td>—</td><td><span class="badge badge-meta">META</span></td><td class="status-noresp">NÃO RESPONDE</td><td class="hoje">15/06</td></tr>
+            <tr><td style="color:#64748b">2783</td><td>Daniel (PCD)</td><td>T-Cross 200TSi</td><td><span class="badge badge-meta">META</span></td><td class="status-outros">PCD AUDITIVO</td><td class="hoje">15/06</td></tr>
+            <tr><td style="color:#64748b">2795</td><td>Jonas (PCD)</td><td>Taos 1.4 Turbo</td><td><span class="badge badge-meta">META</span></td><td class="status-outros">TAOS PCD</td><td class="urgente">12/06</td></tr>
+            <tr><td style="color:#64748b">2801</td><td>Patricia</td><td>Nivus 0km</td><td><span class="badge badge-meta">META</span></td><td class="status-pens">PENSANDO</td><td class="urgente">12/06</td></tr>
+            <tr><td style="color:#64748b">2810</td><td>—</td><td>Nivus 0km</td><td><span class="badge badge-meta">META</span></td><td class="status-vira">VIRA AQUI</td><td class="urgente">11/06</td></tr>
+            <tr><td style="color:#64748b">2814</td><td>Ariston</td><td>Tera 0km</td><td><span class="badge badge-meta">META</span></td><td class="status-noresp">NÃO RESPONDE</td><td class="hoje">15/06</td></tr>
+            <tr><td style="color:#64748b">2834</td><td>Átila</td><td>Seminovos</td><td><span class="badge badge-meta">META</span></td><td class="status-noresp">NÃO RESPONDE</td><td class="hoje">15/06</td></tr>
+            <tr><td style="color:#64748b">2844</td><td>Grasiela</td><td>T-Cross 2023</td><td><span class="badge badge-meta">META</span></td><td class="status-conv">CONVERSANDO</td><td class="hoje">15/06</td></tr>
+            <tr><td style="color:#64748b">2848</td><td>E banco couro</td><td>Nivus 0km</td><td><span class="badge badge-meta">META</span></td><td class="status-outros">PARA PARENTE</td><td class="hoje">15/06</td></tr>
+            <tr><td style="color:#64748b">2856</td><td>Fabio</td><td>Nivus 0km</td><td><span class="badge badge-meta">META</span></td><td class="status-conv">CONVERSANDO</td><td class="hoje">15/06</td></tr>
+            <tr><td style="color:#64748b">2862</td><td>Qual preço?</td><td>Nivus 0km</td><td><span class="badge badge-meta">META</span></td><td class="status-outros">MANDEI MSG</td><td class="urgente">12/06</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- VENDAS POR PERÍODO -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><span class="dot dot-green"></span> Vendas Realizadas por Período</div>
+      <div class="chart-wrap">
+        <canvas id="chartVendasPeriodo"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot dot-orange"></span> Modelos Mais Vendidos (20 vendas)</div>
+      <div class="chart-wrap">
+        <canvas id="chartModelosVendidos"></canvas>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  Dashboard CRM — Vendedor Cesar &nbsp;|&nbsp; Dados extraídos do Google Sheets &nbsp;|&nbsp; 02/06/2026
+</div>
+
+<script>
+const colorBlue = '#3b82f6';
+const colorGreen = '#22c55e';
+const colorRed = '#ef4444';
+const colorOrange = '#f97316';
+const colorPurple = '#a855f7';
+const colorTeal = '#14b8a6';
+const colorYellow = '#eab308';
+const colorPink = '#ec4899';
+const colorGray = '#64748b';
+
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.borderColor = '#2d3148';
+Chart.defaults.font.family = 'Segoe UI';
+
+// ORIGEM DAS VENDAS
+new Chart(document.getElementById('chartOrigemVendas'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Carteira', 'Ligação', 'Balcão', 'Sem origem'],
+    datasets: [{
+      data: [8, 5, 4, 3],
+      backgroundColor: [colorBlue, colorGreen, colorPurple, colorGray],
+      borderWidth: 2, borderColor: '#1e2030'
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'right', labels: { boxWidth: 12, padding: 16, font: { size: 12 } } }
+    }
+  }
+});
+
+// ORIGEM LEADS ATIVOS
+new Chart(document.getElementById('chartOrigemLeads'), {
+  type: 'doughnut',
+  data: {
+    labels: ['META (Insta/FB)', 'Whats Site', 'Ligação'],
+    datasets: [{
+      data: [24, 2, 1],
+      backgroundColor: [colorBlue, colorTeal, colorOrange],
+      borderWidth: 2, borderColor: '#1e2030'
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'right', labels: { boxWidth: 12, padding: 16, font: { size: 12 } } }
+    }
+  }
+});
+
+// VENDAS POR PERÍODO
+new Chart(document.getElementById('chartVendasPeriodo'), {
+  type: 'bar',
+  data: {
+    labels: ['Março/2026', 'Abril/2026', 'Maio/2026'],
+    datasets: [{
+      label: 'Vendas',
+      data: [8, 0, 12],
+      backgroundColor: [colorBlue, colorGray, colorGreen],
+      borderRadius: 6, borderSkipped: false
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { beginAtZero: true, ticks: { stepSize: 2 } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// MODELOS VENDIDOS
+new Chart(document.getElementById('chartModelosVendidos'), {
+  type: 'bar',
+  data: {
+    labels: ['Virtus', 'Tera', 'T-Cross', 'Polo', 'Nivus', 'Outros'],
+    datasets: [{
+      label: 'Unidades',
+      data: [3, 3, 3, 2, 2, 7],
+      backgroundColor: [colorBlue, colorTeal, colorPurple, colorOrange, colorGreen, colorGray],
+      borderRadius: 6, borderSkipped: false
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { beginAtZero: true, ticks: { stepSize: 1 } },
+      y: { grid: { display: false } }
+    }
+  }
+});
+</script>
+</body>
+</html>
