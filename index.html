@@ -4,24 +4,233 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard CRM — Cesar</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 <style>
-  body{font-family:'Segoe UI',sans-serif;background:#0f1117;color:#e2e8f0;
-    display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
-  .box{text-align:center;max-width:360px;padding:32px}
-  .icon{font-size:48px;margin-bottom:16px}
-  h1{font-size:20px;font-weight:700;margin-bottom:8px}
-  p{color:#94a3b8;font-size:14px;line-height:1.6}
-  .spinner{width:32px;height:32px;border:3px solid rgba(255,255,255,.1);
-    border-top-color:#4f8ef7;border-radius:50%;animation:spin .9s linear infinite;margin:24px auto 0}
-  @keyframes spin{to{transform:rotate(360deg)}}
+:root{--bg:#0f1117;--card:#1a1d27;--card2:#21253a;--accent:#4f8ef7;--green:#22c55e;
+  --yellow:#f59e0b;--red:#ef4444;--text:#e2e8f0;--muted:#94a3b8;--border:rgba(255,255,255,.07)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+header{background:var(--card);border-bottom:1px solid var(--border);padding:18px 28px;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:36px;height:36px;background:var(--accent);border-radius:8px;
+  display:flex;align-items:center;justify-content:center;font-size:18px}
+.logo-text h1{font-size:17px;font-weight:700}
+.logo-text p{font-size:12px;color:var(--muted)}
+#last-update{font-size:12px;color:var(--muted)}
+main{padding:24px 28px;max-width:1280px;margin:0 auto}
+section{margin-bottom:28px}
+.section-title{font-size:13px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.08em;color:var(--muted);margin-bottom:14px}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
+.kpi-card{background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:18px 16px;display:flex;flex-direction:column;gap:6px}
+.kpi-card .icon{font-size:20px;margin-bottom:2px}
+.kpi-card .val{font-size:32px;font-weight:800;line-height:1}
+.kpi-card .label{font-size:12px;color:var(--muted)}
+.kpi-card .sub{font-size:11px;color:var(--muted);margin-top:2px}
+.kpi-card.blue .val{color:var(--accent)}.kpi-card.green .val{color:var(--green)}
+.kpi-card.red .val{color:var(--red)}.kpi-card.yellow .val{color:var(--yellow)}
+.charts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px}
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px}
+.chart-card h3{font-size:13px;font-weight:600;color:var(--muted);margin-bottom:14px}
+.chart-wrap{position:relative;height:180px}
+.timeline{display:flex;flex-direction:column;gap:10px}
+.tl-item{background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:12px 16px;display:flex;align-items:flex-start;gap:14px}
+.tl-date{color:#fff;border-radius:6px;padding:4px 10px;font-size:12px;font-weight:700;
+  white-space:nowrap;min-width:90px;text-align:center}
+.tl-date.past{background:#ef4444}.tl-date.hoje{background:#f59e0b}.tl-date.futuro{background:#4f8ef7}
+.tl-leads{display:flex;flex-wrap:wrap;gap:6px}
+.tl-lead{background:var(--card2);border-radius:6px;padding:3px 10px;font-size:12px}
+.tl-lead span{color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.07em;
+  color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--border)}
+td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(79,142,247,.05)}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.badge-meta{background:#3b3f7a;color:#8b9ff7}.badge-site{background:#1e3a3a;color:#34d399}
+.badge-ligacao{background:#3b2e1e;color:#f59e0b}.badge-carteira{background:#2a1e3b;color:#a78bfa}
+.badge-balcao{background:#1e2f3b;color:#67e8f9}.badge-indicacao{background:#1f3027;color:#86efac}
+.badge-olx{background:#3b2020;color:#fca5a5}.badge-outros{background:#2a2a2a;color:#94a3b8}
+.obs{color:var(--muted);font-size:12px;max-width:220px}
+.alert{color:var(--red);font-weight:700}.warn{color:var(--yellow);font-weight:600}
+@media(max-width:640px){main{padding:16px}header{padding:14px 16px}.kpi-grid{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
-  <div class="box">
-    <div class="icon">🚗</div>
-    <h1>Dashboard CRM — Cesar</h1>
-    <p>Aguardando primeira execução do Apps Script.<br>Os dados aparecerão em breve.</p>
-    <div class="spinner"></div>
+<header>
+  <div class="logo">
+    <div class="logo-icon">🚗</div>
+    <div class="logo-text">
+      <h1>Dashboard CRM — Cesar</h1>
+      <p>Concessionária VW — Blumenau/SC</p>
+    </div>
   </div>
+  <span id="last-update">Atualizado: 14/06/2026</span>
+</header>
+<main>
+
+  <section>
+    <div class="section-title">Visão Geral</div>
+    <div class="kpi-grid">
+      <div class="kpi-card blue"><div class="icon">🟢</div><div class="val">27</div><div class="label">Leads Ativos</div></div>
+      <div class="kpi-card green"><div class="icon">🏆</div><div class="val">21</div><div class="label">Vendas Concluídas</div></div>
+      <div class="kpi-card red"><div class="icon">🔕</div><div class="val">7</div><div class="label">Não Respondem</div><div class="sub">Manoel, Anelise, Manoela, Leonardo, Fernando, Querino, Ariston</div></div>
+      <div class="kpi-card red"><div class="icon">📅</div><div class="val">20</div><div class="label">Contatos em Atraso / Urgentes</div></div>
+      <div class="kpi-card yellow"><div class="icon">❌</div><div class="val">4</div><div class="label">Comprou Concorrente</div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-title">Distribuição</div>
+    <div class="charts-grid">
+      <div class="chart-card"><h3>ORIGEM — LEADS ATIVOS</h3><div class="chart-wrap"><canvas id="cOA"></canvas></div></div>
+      <div class="chart-card"><h3>MODELOS — LEADS ATIVOS</h3><div class="chart-wrap"><canvas id="cMA"></canvas></div></div>
+      <div class="chart-card"><h3>ORIGEM DAS VENDAS</h3><div class="chart-wrap"><canvas id="cOV"></canvas></div></div>
+      <div class="chart-card"><h3>MODELOS VENDIDOS</h3><div class="chart-wrap"><canvas id="cMV"></canvas></div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-title">Próximos Contatos</div>
+    <div class="timeline">
+
+      <div class="tl-item">
+        <div class="tl-date past">11/06 ⚠</div>
+        <div class="tl-leads">
+          <div class="tl-lead">Manoel <span>—</span></div>
+          <div class="tl-lead">Manoela Mafra <span>Tera</span></div>
+          <div class="tl-lead">Leonardo <span>T-Cross</span></div>
+          <div class="tl-lead">Fernando <span>Nivus</span></div>
+          <div class="tl-lead">Lead 2810 <span>Nivus</span></div>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-date past">12/06 ⚠</div>
+        <div class="tl-leads">
+          <div class="tl-lead">Anelise <span>Tera</span></div>
+          <div class="tl-lead">Cristiane <span>T-Cross</span></div>
+          <div class="tl-lead">Jonas <span>Taos</span></div>
+          <div class="tl-lead">Patricia <span>Nivus</span></div>
+          <div class="tl-lead">Lead 2862 <span>Nivus</span></div>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-date futuro">15/06</div>
+        <div class="tl-leads">
+          <div class="tl-lead">Volni Pereira <span>Tera</span></div>
+          <div class="tl-lead">Luiz <span>—</span></div>
+          <div class="tl-lead">Tiego <span>Tera</span></div>
+          <div class="tl-lead">Querino <span>—</span></div>
+          <div class="tl-lead">Daniel <span>T-Cross</span></div>
+          <div class="tl-lead">Ariston <span>Tera</span></div>
+          <div class="tl-lead">Átila <span>—</span></div>
+          <div class="tl-lead">Grasiela <span>T-Cross</span></div>
+          <div class="tl-lead">Lead 2848 <span>Nivus</span></div>
+          <div class="tl-lead">Fabio <span>Nivus</span></div>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-date futuro">01/07</div>
+        <div class="tl-leads">
+          <div class="tl-lead">Edson <span>Corolla</span></div>
+          <div class="tl-lead">Lead 1890 <span>—</span></div>
+          <div class="tl-lead">Camila <span>—</span></div>
+          <div class="tl-lead">Fernando R. <span>Taos</span></div>
+          <div class="tl-lead">Joao <span>Kwid</span></div>
+          <div class="tl-lead">Maristela <span>HB-20</span></div>
+          <div class="tl-lead">Claudia Sara <span>—</span></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="section-title">Leads Ativos — Detalhamento</div>
+    <div class="chart-card" style="padding:0;overflow:hidden">
+      <table>
+        <thead><tr><th>Nome</th><th>Modelo</th><th>Origem</th><th>Próx. Contato</th><th>Observações</th></tr></thead>
+        <tbody>
+          <tr><td>Edson</td><td>Corolla</td><td><span class="badge badge-site">Whats Site</span></td><td>01/07/2026</td><td class="obs">COROLLA 2019/2020</td></tr>
+          <tr><td>Lead 1890</td><td>—</td><td><span class="badge badge-meta">META</span></td><td>01/07/2026</td><td class="obs">CARRO ATE 20.000</td></tr>
+          <tr><td>Camila</td><td>—</td><td><span class="badge badge-meta">META</span></td><td>01/07/2026</td><td class="obs">WHATSS PCD</td></tr>
+          <tr><td>Fernando Rotermell</td><td>Taos</td><td><span class="badge badge-site">Whats Site</span></td><td>01/07/2026</td><td class="obs">QUER TAOS HIGHLINE 2022</td></tr>
+          <tr><td>Manoel</td><td>—</td><td><span class="badge badge-meta">META</span></td><td class="alert">11/06/2026</td><td class="obs">NAO RESPONDE</td></tr>
+          <tr><td>Joao</td><td>Kwid</td><td><span class="badge badge-ligacao">Ligação</span></td><td>01/07/2026</td><td class="obs">QUER APENAS KWID</td></tr>
+          <tr><td>Anelise</td><td>Tera</td><td><span class="badge badge-meta">META</span></td><td class="alert">12/06/2026</td><td class="obs">NAO RESPONDE</td></tr>
+          <tr><td>Manoela Mafra</td><td>Tera</td><td><span class="badge badge-meta">META</span></td><td class="alert">11/06/2026</td><td class="obs">NAO RESPONDE</td></tr>
+          <tr><td>Volni Pereira</td><td>Tera</td><td><span class="badge badge-meta">META</span></td><td class="warn">15/06/2026</td><td class="obs">VIRA AQUI</td></tr>
+          <tr><td>Leonardo</td><td>T-Cross</td><td><span class="badge badge-meta">META</span></td><td class="alert">11/06/2026</td><td class="obs">NAO RESPONDE</td></tr>
+          <tr><td>Fernando</td><td>Nivus</td><td><span class="badge badge-meta">META</span></td><td class="alert">11/06/2026</td><td class="obs">NAO RESPONDE</td></tr>
+          <tr><td>Maristela</td><td>—</td><td><span class="badge badge-meta">META</span></td><td>01/07/2026</td><td class="obs">QUER APENAS HB-20 HATCH</td></tr>
+          <tr><td>Cristiane</td><td>T-Cross</td><td><span class="badge badge-meta">META</span></td><td class="alert">12/06/2026</td><td class="obs">PENSANDO, TALVEZ TAOS</td></tr>
+          <tr><td>Claudia Sara</td><td>—</td><td><span class="badge badge-meta">META</span></td><td>01/07/2026</td><td class="obs">SAVEIRO CROSS</td></tr>
+          <tr><td>Luiz</td><td>—</td><td><span class="badge badge-meta">META</span></td><td class="warn">15/06/2026</td><td class="obs">NAO PODE FALAR</td></tr>
+          <tr><td>Tiego</td><td>Tera</td><td><span class="badge badge-meta">META</span></td><td class="warn">15/06/2026</td><td class="obs">PENSANDO</td></tr>
+          <tr><td>Querino</td><td>—</td><td><span class="badge badge-meta">META</span></td><td class="warn">15/06/2026</td><td class="obs">NAO RESPONDE</td></tr>
+          <tr><td>Daniel</td><td>T-Cross</td><td><span class="badge badge-meta">META</span></td><td class="warn">15/06/2026</td><td class="obs">PCD AUDITIVO</td></tr>
+          <tr><td>Jonas</td><td>Taos</td><td><span class="badge badge-meta">META</span></td><td class="alert">12/06/2026</td><td class="obs">TAOS PCD</td></tr>
+          <tr><td>Patricia</td><td>Nivus</td><td><span class="badge badge-meta">META</span></td><td class="alert">12/06/2026</td><td class="obs">PATRICIA PENSANDO</td></tr>
+          <tr><td>Lead 2810</td><td>Nivus</td><td><span class="badge badge-meta">META</span></td><td class="alert">11/06/2026</td><td class="obs">VIRA AQUI</td></tr>
+          <tr><td>Ariston</td><td>Tera</td><td><span class="badge badge-meta">META</span></td><td class="warn">15/06/2026</td><td class="obs">NAO RESPONDE</td></tr>
+          <tr><td>Átila</td><td>—</td><td><span class="badge badge-meta">META</span></td><td class="warn">15/06/2026</td><td class="obs">LISTA SEMINOVOS</td></tr>
+          <tr><td>Grasiela Passing</td><td>T-Cross</td><td><span class="badge badge-meta">META</span></td><td class="warn">15/06/2026</td><td class="obs">T-CROSS 2023</td></tr>
+          <tr><td>Lead 2848</td><td>Nivus</td><td><span class="badge badge-meta">META</span></td><td class="warn">15/06/2026</td><td class="obs">NIVUS PARA PARENTE</td></tr>
+          <tr><td>Fabio</td><td>Nivus</td><td><span class="badge badge-meta">META</span></td><td class="warn">15/06/2026</td><td class="obs">CONVERSANDO</td></tr>
+          <tr><td>Lead 2862</td><td>Nivus</td><td><span class="badge badge-meta">META</span></td><td class="alert">12/06/2026</td><td class="obs">MANDEI MENSAGEM</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-title">Comprou no Concorrente</div>
+    <div class="chart-card" style="padding:0;overflow:hidden">
+      <table>
+        <thead><tr><th>Nome</th><th>Modelo</th><th>Origem</th><th>Obs</th></tr></thead>
+        <tbody>
+          <tr><td>Sidy</td><td>Virtus</td><td><span class="badge badge-outros">—</span></td><td class="obs">—</td></tr>
+          <tr><td>Everton</td><td>Nivus</td><td><span class="badge badge-balcao">Balcão</span></td><td class="obs">nivus, compass e kicks ate 100.000</td></tr>
+          <tr><td>Angelica</td><td>Polo Track</td><td><span class="badge badge-site">Whats Site</span></td><td class="obs">mandei mensagem</td></tr>
+          <tr><td>Giovanne Pimentel</td><td>—</td><td><span class="badge badge-meta">META</span></td><td class="obs">conversando</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+<script>
+const C=['#4f8ef7','#22c55e','#f59e0b','#ef4444','#a78bfa','#34d399','#fb923c','#67e8f9','#fbbf24','#f472b6'];
+function mkDoughnut(id,obj){
+  const labels=Object.keys(obj),values=Object.values(obj);
+  new Chart(document.getElementById(id).getContext('2d'),{
+    type:'doughnut',
+    data:{labels,datasets:[{data:values,backgroundColor:C,borderWidth:0}]},
+    options:{plugins:{legend:{position:'right',labels:{color:'#94a3b8',font:{size:11},boxWidth:12}}},maintainAspectRatio:false}
+  });
+}
+function mkBar(id,obj){
+  const labels=Object.keys(obj),values=Object.values(obj);
+  new Chart(document.getElementById(id).getContext('2d'),{
+    type:'bar',
+    data:{labels,datasets:[{data:values,backgroundColor:C,borderRadius:4,borderSkipped:false}]},
+    options:{indexAxis:'y',plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#94a3b8',font:{size:11}}},
+              y:{grid:{display:false},ticks:{color:'#94a3b8',font:{size:11}}}},maintainAspectRatio:false}
+  });
+}
+
+mkDoughnut('cOA', {"META":25,"Whats Site":2,"Ligação":1});
+mkBar('cMA',      {"Sem modelo":8,"Nivus":6,"Tera":5,"T-Cross":3,"Taos":2,"Corolla":1,"Kwid":1,"T-Cross 2023":1});
+mkDoughnut('cOV', {"Carteira":9,"Ligação":5,"Balcão":4,"Outros":3});
+mkBar('cMV',      {"T-Cross":6,"Polo":3,"Virtus":3,"Tera":3,"Nivus":2,"Golf GTI":1,"Saveiro":1,"Taos":1,"Tiguan":1});
+</script>
 </body>
 </html>
